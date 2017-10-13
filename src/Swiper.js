@@ -1,5 +1,5 @@
-import React, { PureComponent, PropTypes } from 'react';
-
+import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import {
   StyleSheet,
   View,
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const { height: deviceHeight } = Dimensions.get('window');
+const { height: deviceHeight, width: deviceWidth } = Dimensions.get('window');
 
 const uiTheme = {
   palette: {
@@ -277,11 +277,13 @@ export default class SwiperAnimated extends PureComponent {
       if (this.valueX > 0) {
         onRightSwipe(card);
         this.advanceState(velocity, vy, true);
+        onRemoveCard(this.currentIndex[this.guid], 'right');
       } else {
         onLeftSwipe(card);
         this.advanceState(velocity, vy, false);
+        onRemoveCard(this.currentIndex[this.guid], 'left');
       }
-      onRemoveCard(this.currentIndex[this.guid]);
+      // onRemoveCard(this.currentIndex[this.guid]);
     } else {
       this.resetPan();
     }
@@ -409,27 +411,31 @@ export default class SwiperAnimated extends PureComponent {
   }
 
   forceLeftSwipe = () => {
-    this.cardAnimation = Animated.timing(this.pan, {
-      toValue: { x: -500, y: 0 },
-    }).start((status) => {
-      this.resetState();
-      if (status.finished) this.handleDirection(false);
+    if (this.currentIndex[this.guid] !== this.props.children.length - 1) {
+      this.cardAnimation = Animated.timing(this.pan, {
+        toValue: { x: -500, y: 0 },
+      }).start((status) => {
+        this.resetState();
+        if (status.finished) this.handleDirection(true);
 
-      this.cardAnimation = null;
-    });
-    this.props.onRemoveCard(this.currentIndex[this.guid]);
+        this.cardAnimation = null;
+      });
+      this.props.onRemoveCard(this.currentIndex[this.guid], 'left');
+    }
   }
 
   forceRightSwipe = () => {
-    this.cardAnimation = Animated.timing(this.pan, {
-      toValue: { x: 500, y: 0 },
-    }).start((status) => {
-      this.resetState();
-      if (status.finished) this.handleDirection(true);
+    if (this.currentIndex[this.guid] !== this.props.children.length - 1) {
+      this.cardAnimation = Animated.timing(this.pan, {
+        toValue: { x: 500, y: 0 },
+      }).start((status) => {
+        this.resetState();
+        if (status.finished) this.handleDirection(true);
 
-      this.cardAnimation = null;
-    });
-    this.props.onRemoveCard(this.currentIndex[this.guid]);
+        this.cardAnimation = null;
+      });
+      this.props.onRemoveCard(this.currentIndex[this.guid], 'right');
+    }
   }
 
   handleBackPress = () => {
@@ -591,6 +597,18 @@ export default class SwiperAnimated extends PureComponent {
         if (this.pan.y === 0) {
           translateY = this.enter.interpolate({ inputRange: [0.5, 1], outputRange: [0, 30] });
         }
+
+        shadowOpacityLeft = Animated.add(this.pan.y, this.pan.x).interpolate({
+          inputRange: [-deviceWidth, 0, deviceWidth],
+          outputRange: [1, 0, 0],
+          extrapolate: 'clamp',
+        });
+
+        shadowOpacityRight = Animated.add(this.pan.y, this.pan.x).interpolate({
+          inputRange: [-deviceWidth, 0, deviceWidth],
+          outputRange: [0, 0, 1],
+          extrapolate: 'clamp',
+        });
       }
 
       const animatedCardStyles = {
@@ -616,6 +634,22 @@ export default class SwiperAnimated extends PureComponent {
           style={animatedCardStyles}
           {...panHandlers}
         >
+          <Animated.View style={{
+            position: 'absolute',
+            zIndex: 1000,
+            width: deviceWidth,
+            height: deviceHeight - 130 - offsetY,
+            opacity: i === count - 1 ? shadowOpacityLeft : 0,
+            backgroundColor: 'red',
+          }}/>
+          <Animated.View style={{
+            position: 'absolute',
+            zIndex: 1000,
+            width: deviceWidth,
+            height: deviceHeight - 130 - offsetY,
+            opacity: i === count - 1 ? shadowOpacityRight : 0,
+            backgroundColor: 'green',
+          }}/>
           {card}
         </Animated.View>);
     });
