@@ -230,9 +230,9 @@ export default class SwiperAnimated extends PureComponent {
     } = this.props;
 
     let velocity;
-    if (vx >= 0) {
+    if (dx >= 0) {
       velocity = clamp(vx, 4, 6);
-    } else if (vx < 0) {
+    } else if (dx < 0) {
       velocity = clamp(vx * -1, 4, 6) * -1;
     } else {
       velocity = dx < 0 ? -3 : 3;
