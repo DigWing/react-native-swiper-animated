@@ -371,6 +371,7 @@ export default class SwiperAnimated extends PureComponent {
   }
 
   goToPrevCard = () => {
+    return this.goToNextCard(); // swiper goes only forward
     this.currentIndex[this.guid] -= 1;
 
     if (this.currentIndex[this.guid] < 0) {
@@ -678,11 +679,39 @@ export default class SwiperAnimated extends PureComponent {
 
     const handler = swiper ? this.panResponder.panHandlers : {};
 
+    shadowOpacityLeft = Animated.add(this.pan.y, this.pan.x).interpolate({
+      inputRange: [-deviceWidth, 0, deviceWidth],
+      outputRange: [1, 0, 0],
+      extrapolate: 'clamp',
+    });
+
+    shadowOpacityRight = Animated.add(this.pan.y, this.pan.x).interpolate({
+      inputRange: [-deviceWidth, 0, deviceWidth],
+      outputRange: [0, 0, 1],
+      extrapolate: 'clamp',
+    });
+
     return (
       <Animated.View
         style={[styles.card, animatedCardStyles]}
         {...handler}
       >
+        <Animated.View style={{
+          position: 'absolute',
+          zIndex: 1000,
+          width: deviceWidth,
+          height: deviceHeight - 130 - this.props.stackOffsetY,
+          opacity: shadowOpacityLeft,
+          backgroundColor: 'red',
+        }} />
+        <Animated.View style={{
+          position: 'absolute',
+          zIndex: 1000,
+          width: deviceWidth,
+          height: deviceHeight - 130 - this.props.stackOffsetY,
+          opacity: shadowOpacityRight,
+          backgroundColor: 'green',
+        }} />
         {renderCard ? renderCard(this.state.card) : this.state.card}
       </Animated.View>
     );
